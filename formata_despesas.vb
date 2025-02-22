@@ -26,3 +26,51 @@ Sub InicializaConfiguracoes()
     EXIBE_BARRA_PROGRESSO = True
     GERA_RELATORIO = True
 End Sub
+
+Sub SaneiaDadosPlanilhaTroca()
+    On Error GoTo Erro
+
+    Dim ws As Worksheet
+    Dim arrDados As Variant
+    Dim i As Long, lastRow As Long
+
+    ' Define a planilha
+    Set ws = ThisWorkbook.Sheets(PLAN_PLAN_TROCA)
+
+    ' Determina a última linha preenchida
+    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+
+    ' Carrega os dados existentes na memória
+    arrDados = ws.Range("A1:E" & lastRow).Value
+
+    ' Percorre o array em memória
+    For i = LBound(arrDados, 1) To UBound(arrDados, 1)
+        ' Trata valores incompatíveis ou erros
+        If IsError(arrDados(i, 4)) Or IsEmpty(arrDados(i, 4)) Or arrDados(i, 4) = "outros" Then
+            ' Limpa a linha inteira se a coluna 4 for inválida ou "outros"
+            arrDados(i, 1) = ""
+            arrDados(i, 2) = ""
+            arrDados(i, 3) = ""
+            arrDados(i, 4) = ""
+            arrDados(i, 5) = ""
+        ElseIf IsError(arrDados(i, 3)) Or IsEmpty(arrDados(i, 3)) Or arrDados(i, 3) = 0 Then
+            ' Limpa a linha inteira se a coluna 3 for inválida ou zero
+            arrDados(i, 1) = ""
+            arrDados(i, 2) = ""
+            arrDados(i, 3) = ""
+            arrDados(i, 4) = ""
+            arrDados(i, 5) = ""
+        End If
+    Next i
+
+    ' Retorna os dados limpos para a tabela
+    ws.Range("A1:E" & lastRow).Value = arrDados
+
+    ' Log de sucesso
+    RegistrarLog "SaneiaDadosPlanilhaTroca concluída com sucesso."
+    Exit Sub
+
+Erro:
+    RegistrarLog "Erro em SaneiaDadosPlanilhaTroca: " & Err.Description
+    MsgBox "Erro em SaneiaDadosPlanilhaTroca: " & Err.Description, vbCritical
+End Sub
