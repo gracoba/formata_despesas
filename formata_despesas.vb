@@ -89,16 +89,24 @@ Sub SaneiaDadosPlanilhaTroca()
 
     ' Percorre o array em memória
     For i = LBound(arrDados, 1) To UBound(arrDados, 1)
-        ' Verifica a coluna 4 (motivo) e limpa a linha se necessário
-        If IsError(arrDados(i, 4)) Or IsEmpty(arrDados(i, 4)) Or arrDados(i, 4) = "outros" Then
+        ' Verifica se há erros na coluna 4
+        If IsError(arrDados(i, 4)) Then
+            ' Adiciona um log indicando o erro na célula
+            RegistrarLog "Erro na célula Linha " & i & ", Coluna 4."
             LimparLinha arrDados, i
-        ' Verifica a coluna 3 (valor) e limpa a linha se necessário
+        ElseIf IsEmpty(arrDados(i, 4)) Then
+            ' Limpa a linha inteira se a coluna 4 estiver vazia
+            LimparLinha arrDados, i
+        ElseIf arrDados(i, 4) = "outros" Then
+            ' Limpa a linha inteira se a coluna 4 for "outros"
+            LimparLinha arrDados, i
         ElseIf IsError(arrDados(i, 3)) Or IsEmpty(arrDados(i, 3)) Or arrDados(i, 3) = 0 Then
+            ' Verifica a coluna 3 (dados inválidos ou zero) e limpa a linha
             LimparLinha arrDados, i
         End If
     Next i
 
-    ' Retorna os dados limpos para a planilha
+    ' Retorna os dados limpos para a tabela
     ws.Range("A1:E" & lastRow).Value = arrDados
 
     ' Log de sucesso
@@ -108,6 +116,16 @@ Sub SaneiaDadosPlanilhaTroca()
 Erro:
     RegistrarLog "Erro em SaneiaDadosPlanilhaTroca: " & Err.Description
     MsgBox "Erro em SaneiaDadosPlanilhaTroca: " & Err.Description, vbCritical
+End Sub
+
+' ----------------------------------------------------------------------
+' Sub-rotina auxiliar para limpar uma linha no array
+' ----------------------------------------------------------------------
+Sub LimparLinha(ByRef arr As Variant, linha As Long)
+    Dim col As Long
+    For col = LBound(arr, 2) To UBound(arr, 2)
+        arr(linha, col) = "" ' Limpa cada célula da linha
+    Next col
 End Sub
 
 ' ----------------------------------------------------------------------
