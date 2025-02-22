@@ -27,6 +27,50 @@ Sub InicializaConfiguracoes()
     GERA_RELATORIO = True
 End Sub
 
+' ===================================================================
+
+Sub DiagnosticaTiposDeDados()
+    Dim ws As Worksheet
+    Dim arrDados As Variant
+    Dim i As Long, j As Long
+    Dim lastRow As Long
+
+    ' Define a planilha
+    Set ws = ThisWorkbook.Sheets("plan_troca")
+
+    ' Determina a última linha preenchida
+    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+
+    ' Carrega os dados na memória
+    arrDados = ws.Range("A1:E" & lastRow).Value
+
+    ' Percorre o array e exibe os tipos de dados
+    For i = LBound(arrDados, 1) To UBound(arrDados, 1)
+        For j = LBound(arrDados, 2) To UBound(arrDados, 2)
+            Debug.Print "Linha " & i & ", Coluna " & j & ": " & TipoDeDado(arrDados(i, j))
+        Next j
+    Next i
+End Sub
+
+' Função auxiliar para determinar o tipo de dado
+Function TipoDeDado(valor As Variant) As String
+    If IsEmpty(valor) Then
+        TipoDeDado = "Empty"
+    ElseIf IsNull(valor) Then
+        TipoDeDado = "Null"
+    ElseIf IsError(valor) Then
+        TipoDeDado = "Error"
+    ElseIf IsNumeric(valor) Then
+        TipoDeDado = "Number"
+    ElseIf IsDate(valor) Then
+        TipoDeDado = "Date"
+    ElseIf IsObject(valor) Then
+        TipoDeDado = "Object"
+    Else
+        TipoDeDado = "Text"
+    End If
+End Function
+
 Sub SaneiaDadosPlanilhaTroca()
     On Error GoTo Erro
 
@@ -35,7 +79,7 @@ Sub SaneiaDadosPlanilhaTroca()
     Dim i As Long, lastRow As Long
 
     ' Define a planilha
-    Set ws = ThisWorkbook.Sheets(PLAN_PLAN_TROCA)
+    Set ws = ThisWorkbook.Sheets("plan_troca")
 
     ' Determina a última linha preenchida
     lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
@@ -45,23 +89,16 @@ Sub SaneiaDadosPlanilhaTroca()
 
     ' Percorre o array em memória
     For i = LBound(arrDados, 1) To UBound(arrDados, 1)
-        ' Verifica se há erros na coluna 4
-        If IsError(arrDados(i, 4)) Then
-            ' Limpa a linha inteira se houver erro na coluna 4
+        ' Verifica a coluna 4 (motivo) e limpa a linha se necessário
+        If IsError(arrDados(i, 4)) Or IsEmpty(arrDados(i, 4)) Or arrDados(i, 4) = "outros" Then
             LimparLinha arrDados, i
-        ElseIf IsEmpty(arrDados(i, 4)) Then
-            ' Limpa a linha inteira se a coluna 4 estiver vazia
-            LimparLinha arrDados, i
-        ElseIf arrDados(i, 4) = "outros" Then
-            ' Limpa a linha inteira se a coluna 4 for "outros"
-            LimparLinha arrDados, i
+        ' Verifica a coluna 3 (valor) e limpa a linha se necessário
         ElseIf IsError(arrDados(i, 3)) Or IsEmpty(arrDados(i, 3)) Or arrDados(i, 3) = 0 Then
-            ' Verifica a coluna 3 (dados inválidos ou zero) e limpa a linha
             LimparLinha arrDados, i
         End If
     Next i
 
-    ' Retorna os dados limpos para a tabela
+    ' Retorna os dados limpos para a planilha
     ws.Range("A1:E" & lastRow).Value = arrDados
 
     ' Log de sucesso
